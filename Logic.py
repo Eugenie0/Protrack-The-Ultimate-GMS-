@@ -104,13 +104,13 @@ class GymManager:
     def get_payment_logs(self):
         log = []
         for member_id,member in self.members.items():
-            log.append(f'{member_id}: {member.get_payment_history()}')
+            log.append(f'{member_id} - {member.name} : {member.get_payment_history}')
         return '\n'.join(log)
     
     def get_unpaid_members(self, cutoff_date):
         unpaid = []
         for member in self.members.values():
-            if not member.payment_log or member.payment_log[-1][1] < cutoff_date:
+            if not member.payment_log or member.payment_log[-1][0] < cutoff_date:
                 unpaid.append(member)
         return unpaid
 
@@ -125,6 +125,7 @@ class GymManager:
         for member in self.members.values():
             if member.workout_plan and member.workout_plan.plan_id == plan_id:
                 member.workout_plan = None
+                print(member.workout_plan)
         if plan_id in self.workout_plans:
             self.workout_plans.pop(plan_id)
             return f"{plan_id} has been successfully removed from the gym's database."
@@ -159,7 +160,18 @@ class GymManager:
             return f"{member_id} has successfully been logged in for: {date}."
         else:
             return f'This person is currently not a member at the gym.'
-
+        
+    def get_member_attendance_report(self,member_id):
+        member = self.members[member_id]
+        if not member:
+            return f'Member ID {member_id} was not found.'
+        
+        if not member.attendance_log:
+            return f'No attendance records for {member.name}.'
+        
+        attendance_days = '\n'.join(member.attendance_log)
+        return f'Attendance for {member.name} ({member_id}): \n{attendance_days}'
+        
     def save_to_file(self, filename="gym_data.json"):
         data = {
             "workout_plans": [plan.to_dict() for plan in self.workout_plans.values()],
@@ -189,3 +201,14 @@ class GymManager:
         "active_today": sum(1 for m in self.members.values() if date.today().isoformat() in m.attendance_log),
         "unpaid_members": len(self.get_unpaid_members(date.today().isoformat()))
         }
+    
+    def on_close(self):
+    # Save everything
+        self._save_all()
+    # Stop the mainloop
+        try:
+            self.quit()
+        except Exception:
+            pass
+    # Destroy the window
+        self.destroy()
