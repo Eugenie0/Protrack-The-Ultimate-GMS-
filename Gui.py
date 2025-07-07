@@ -17,11 +17,18 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import ttk
 import tkinter as tk
 
-os.chdir(os.path.dirname(__file__))
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        base_path = sys._MEIPASS  # When bundled
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # --- Settings ---
 APP_WIDTH, APP_HEIGHT = 1200, 760
-ICON_DIR = "assets"
+ICON_DIR = resource_path("assets")
 DATA_FILE = "gym_data.json"
 BACKGROUND = "#e3f2fd"
 NAV_TEXT = "#0d47a1"
@@ -105,7 +112,7 @@ class GymApp(ctk.CTk):
         manager.save_to_file(DATA_FILE)
         CTkMessagebox(message="Data saved!")
 
-    def on_close(self):
+    def on_close_simple(self):
         self._save_all()
         self.destroy()
 
